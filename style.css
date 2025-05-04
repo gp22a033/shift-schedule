@@ -29,7 +29,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    background: white;
+    background: #007bff;
 }
 
 th, td {
@@ -44,7 +44,7 @@ th {
 }
 
 tr:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: #007bff;
 }
 
 #errorMessage {
@@ -70,23 +70,69 @@ body {
     box-sizing: border-box;
   }
   
+  /* テーブルセル共通 */
+th, td {
+    border: 1px solid #ccc;
+    padding: 14px;
+    font-size: 1.1em; /* 少し大きく */
+    box-sizing: border-box;
+    text-align: center;
+    word-break: break-word;
+    color: #333; /* 文字を濃く */
+    background-color: #fff; /* 白背景で見やすく */
+  }
+  
+  /* テーブル全体 */
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
-    font-size: 0.9em;
-    overflow-x: auto;
+    margin-top: 20px;
+    font-size: 1em;
   }
   
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-  }
-  
+  /* テーブルヘッダー */
   th {
-    background-color: #f2f2f2;
+    background-color: #f8f8f8; /* 薄いグレー背景 */
+    font-weight: bold;
+    color: #111; /* さらに文字を濃く */
   }
+  
+  /* スマホ対応 */
+  @media screen and (max-width: 600px) {
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+  
+    thead tr {
+      display: none;
+    }
+  
+    tr {
+      margin-bottom: 15px;
+      border-bottom: 2px solid #ddd;
+    }
+  
+    td {
+      text-align: right;
+      padding-left: 50%;
+      position: relative;
+      font-size: 1em; /* スマホでも適度な大きさ */
+    }
+  
+    td::before {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: 45%;
+      white-space: nowrap;
+      content: attr(data-label);
+      text-align: left;
+      font-weight: bold;
+      color: #555; /* ラベル文字色も少し濃く */
+    }
+  }
+  
+  
   
   @media screen and (max-width: 600px) {
     h1, h2 {
