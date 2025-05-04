@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>労働時間＆給与計算ツール</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <h1>労働時間＆給与計算ツール</h1>
+
+    <input type="file" id="csvFileInput" accept=".csv"><br><br>
+    <label>時給: <input type="number" id="wageInput" value="1000"> 円</label><br><br>
+    <button onclick="processCSV()">計算する</button>
+
+    <div id="errorMessage" style="color: red; margin-top: 20px;"></div>
+
+    <h2>画像から勤務表を読み取る</h2>
+    <input type="file" id="imageInput" accept="image/*"><br><br>
+    <button onclick="processImage()">画像を読み込んで計算する</button>
+
+    <div id="resultSection" style="display:none;">
+        <h2>勤務一覧</h2>
+        <table id="workTable">
+            <thead>
+                <tr>
+                  <th>勤務日</th>
+                  <th>曜日</th> <!-- ★曜日を追加！ -->
+                  <th>開始時間</th>
+                  <th>終了時間</th>
+                  <th>勤務時間 (h)</th>
+                </tr>
+            </thead>
+              
+            <tbody id="workTableBody">
+                <!-- データ行 -->
+            </tbody>
+        </table>
+
+        <div style="margin-top: 40px;"></div> <!-- 1行空ける -->
+
+        <h2>集計結果</h2>
+        <table id="summaryTable">
+            <tbody id="summaryTableBody">
+                <!-- 集計データ -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let csvData = "";
+
+        document.getElementById('csvFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                csvData = event.target.result;
+            };
+
+            reader.readAsText(file);
+        });
+
+        function processCSV() {
+            document.getElementById('errorMessage').innerText = "";
+
+            if (!csvData) {
+                alert("CSVファイルを先に読み込んでください。");
+                return;
+            }
+
+            const lines = csvData.trim().split('\n');
+            const header = lines.shift().split(',');
+
+            const requiredHeaders = ['Start Date', 'Start Time', 'End Date', 'End Time'];
+            for (const col of requiredHeaders) {
+                if (!header.includes(col)) {
+                    document.getElementById('errorMessage').innerText = `エラー: 必要な列「${col}」がCSVに存在しません。`;
+                    return;
+                }
+            }
+
+            const startDateIndex = header.indexOf('Start Date');
+            const startTimeIndex = header.indexOf('Start Time');
+            const endDateIndex = header.indexOf('End Date');
+            const endTimeIndex = header.indexOf('End Time');
+
+            let totalMinutes = 0;
+            const tableBody = document.getElementById('workTableBody');
+            tableBody.innerHTML = "";
+
+            for (let i = 0; i < lines.length; i++) {
+                const cells = lines[i].split(',');
+
+                if (cells.length < Math.max(startDateIndex, startTimeIndex, endDateIndex, endTimeIndex) + 1) {
+                    document.getElementById('errorMessage').innerText = `エラー: ${i+2}行目にデータが不足しています。`;
+                    return;
+                }
+
+                const startDate = cells[startDateIndex];
+                const startTime = cells[startTimeIndex];
+                const endDate = cells[endDateIndex];
+                const endTime = cells[endTimeIndex];
+
+                const startDateTime = new Date(startDate + ' ' + startTime);
+                const endDateTime = new Date(endDate + ' ' + endTime);
+
+                if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+                    document.getElementById('errorMessage').innerText = `エラー: ${i+2}行目の日付または時刻の形式が正しくありません。`;
+                    return;
+                }
+
+                const diffMs = endDateTime - startDateTime;
+                const diffMinutes = diffMs / (1000 * 60);
+
+                if (diffMinutes < 0) {
+                    document.getElementById('errorMessage').innerText = `エラー: ${i+2}行目で開始時間が終了時間より後になっています。`;
+                    return;
+                }
+
+                totalMinutes += diffMinutes;
+
+                const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+                const weekday = weekDays[startDateTime.getDay()];
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${startDate}</td>
+                    <td>${weekday}</td> <!-- ★曜日追加！ -->
+                    <td>${startTime}</td>
+                    <td>${endTime}</td>
+                    <td>${(diffMinutes / 60).toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+
+            }
+
+            const totalHours = totalMinutes / 60;
+            const hourlyWage = parseFloat(document.getElementById('wageInput').value) || 0;
+            const totalPay = totalHours * hourlyWage;
+
+            const summaryTableBody = document.getElementById('summaryTableBody');
+            summaryTableBody.innerHTML = `
+                <tr>
+                    <th>総労働時間</th>
+                    <td>${totalHours.toFixed(2)} 時間</td>
+                </tr>
+                <tr>
+                    <th>総給与</th>
+                    <td>${totalPay.toFixed(0)} 円</td>
+                </tr>
+            `;
+
+            document.getElementById('resultSection').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
