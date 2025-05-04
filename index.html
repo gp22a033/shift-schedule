@@ -125,13 +125,14 @@
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${startDate}</td>
-                    <td>${weekday}</td> <!-- ★曜日追加！ -->
-                    <td>${startTime}</td>
-                    <td>${endTime}</td>
-                    <td>${(diffMinutes / 60).toFixed(2)}</td>
+                    <td data-label="勤務日">${startDate}</td>
+                    <td data-label="曜日">${weekday}</td>
+                    <td data-label="開始時間">${startTime}</td>
+                    <td data-label="終了時間">${endTime}</td>
+                    <td data-label="勤務時間(h)">${(diffMinutes / 60).toFixed(2)}</td>
                 `;
                 tableBody.appendChild(row);
+
 
             }
 
